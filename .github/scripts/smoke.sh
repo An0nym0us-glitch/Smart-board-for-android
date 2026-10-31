@@ -6,7 +6,11 @@ PKG=com.classboard.app
 mkdir -p shots
 adb install -r "$APK"
 adb logcat -c
-adb shell am start -W -n $PKG/.MainActivity
+# Start the app the way the launcher icon / installer "Open" button does.
+echo "Launcher entry: $(adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER $PKG | tail -1)"
+adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER $PKG | grep -q "$PKG/" \
+  || { echo "::error::No launcher entry for $PKG"; exit 1; }
+adb shell monkey -p $PKG -c android.intent.category.LAUNCHER 1
 sleep 6
 size=$(adb shell wm size | grep -oE '[0-9]+x[0-9]+' | tail -1)
 W=${size%x*}; H=${size#*x}

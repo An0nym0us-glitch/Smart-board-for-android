@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 320x180 launcher banner for Android TV-based classroom panels. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp" android:height="180dp"
+    android:viewportWidth="320" android:viewportHeight="180">
+    <path android:pathData="M0,0 L320,0 L320,180 L0,180 Z" android:fillColor="#FF1F2B26" />
+    <group android:translateX="96" android:translateY="26" android:scaleX="0.5" android:scaleY="0.5">
+        <path android:pathData="M56,170 C80,110 104,110 118,150 S160,196 196,96"
+            android:strokeColor="#F5F5F0" android:strokeWidth="16" android:strokeLineCap="round" />
+        <path android:pathData="M52,196 L204,196 A8,8 0 0 1 204,212 L52,212 A8,8 0 0 1 52,196 Z"
+            android:fillColor="#5FD3A5" />
+    </group>
+</vector>
