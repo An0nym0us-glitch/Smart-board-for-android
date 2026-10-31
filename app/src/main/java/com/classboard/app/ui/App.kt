@@ -138,13 +138,23 @@ class App(val activity: Activity, val root: FrameLayout, val files: FileBridge) 
         updateRibbonState()
     }
 
+    private var lastLayout = Triple(0, 0, 0)
+
     private fun layoutChanged() {
         val rh = ribbon.height
+        val key = Triple(root.width, root.height, rh)
+        if (key == lastLayout) return
+        lastLayout = key
+        val firstLayout = board.insetsBottom == 0.0 && rh > 0
         board.insetsBottom = rh.toDouble()
         popovers.bounds = Rect(0, 0, root.width, root.height - rh)
-        val tlp = toast.layoutParams as FrameLayout.LayoutParams
-        val want = rh + t.dp(16.0).toInt()
-        if (tlp.bottomMargin != want) { tlp.bottomMargin = want; toast.layoutParams = tlp }
+        main.post {
+            if (firstLayout) board.fitPage()
+            val tlp = toast.layoutParams as FrameLayout.LayoutParams
+            val want = rh + t.dp(16.0).toInt()
+            if (tlp.bottomMargin != want) { tlp.bottomMargin = want; toast.layoutParams = tlp }
+            popovers.relayout()
+        }
     }
 
     // ------------------------------------------------------------------------------ ribbon
@@ -332,10 +342,19 @@ class App(val activity: Activity, val root: FrameLayout, val files: FileBridge) 
         popovers.openAt("magic", pageRectToRoot(bounds ?: return))
     }
 
+    private var overlay: View? = null
+    val hasOverlay get() = overlay != null
+
     fun confirm(title: String, message: String, actions: List<ConfirmOverlay.Action>) {
-        var overlay: View? = null
-        overlay = ConfirmOverlay(activity, t, title, message, actions) { overlay?.let { root.removeView(it) } }
-        root.addView(overlay, FrameLayout.LayoutParams(MATCH, MATCH))
+        closeOverlay()
+        val o = ConfirmOverlay(activity, t, title, message, actions) { closeOverlay() }
+        overlay = o
+        root.addView(o, FrameLayout.LayoutParams(MATCH, MATCH))
+    }
+
+    fun closeOverlay() {
+        overlay?.let { root.removeView(it) }
+        overlay = null
     }
 
     fun confirmClearPage() {

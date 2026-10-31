@@ -41,7 +41,7 @@ class ConfirmOverlay(ctx: Context, t: Theme, title: String, message: String, act
             row.addView(b)
         }
         card.addView(row, LinearLayout.LayoutParams(MATCH, WRAP))
-        val lp = LayoutParams(t.dp(460.0).toInt(), WRAP, Gravity.CENTER)
+        val lp = LayoutParams(minOf(t.dp(460.0).toInt(), ctx.resources.displayMetrics.widthPixels - t.dp(32.0).toInt()), WRAP, Gravity.CENTER)
         addView(card, lp)
     }
 }

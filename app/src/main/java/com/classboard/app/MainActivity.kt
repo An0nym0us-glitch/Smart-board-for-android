@@ -148,6 +148,7 @@ class MainActivity : Activity(), FileBridge {
     @Deprecated("Framework Activity API")
     override fun onBackPressed() {
         when {
+            app.hasOverlay -> app.closeOverlay()
             app.popovers.isOpen -> app.popovers.closeAll()
             app.editors.isEditingText -> app.editors.commitAll()
             !app.board.selection.isEmpty -> app.board.selection.clear()
