@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ClassBoard" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/board</item>
+        <item name="android:colorAccent">#FF5FD3A5</item>
+        <item name="android:statusBarColor">#FF141816</item>
+        <item name="android:navigationBarColor">#FF191D1B</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+    <color name="board">#FF1F2B26</color>
+</resources>
