@@ -36,10 +36,16 @@ PDF*) and import the PDF — every slide becomes a page.
 
 ## Install
 
-Download the APK from the latest **Android APK** GitHub Actions run (artifact
-`ClassBoard-release-apk`) and open it on the device (allow installing from this source when
-Android asks). Android 7.0 (API 24) or newer; tablets, interactive flat panels and phones are
-supported.
+1. On the Android device, open
+   **https://github.com/An0nym0us-glitch/Smart-board-for-android/releases/download/latest/ClassBoard.apk**
+   (or the [Releases page](https://github.com/An0nym0us-glitch/Smart-board-for-android/releases/tag/latest)).
+2. Open the downloaded `ClassBoard.apk` and allow **Install unknown apps** for your browser or
+   file manager when Android asks, then tap **Install**.
+3. ClassBoard appears in the app drawer with its own icon.
+
+Files under a GitHub Actions run are wrapped in a `.zip`; if you download from there, unzip it
+first and open the `.apk` inside. Android 7.0 (API 24) or newer; tablets, interactive flat
+panels and phones are supported.
 
 ## Building
 
