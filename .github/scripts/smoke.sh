@@ -64,9 +64,14 @@ shot 05-end
 check "end"
 # Rotate to portrait with the ribbon button; the ribbon must fit on screen in both orientations.
 dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "shots/$1.xml"; }
-adb shell input keyevent KEYCODE_BACK; sleep 1
 adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 2
 dump ui-landscape
+# Close a dialog left open by the taps above (e.g. "Save changes?") so the ribbon is reachable.
+for i in 1 2 3; do
+  xy=$(python3 .github/scripts/ui_bounds.py shots/ui-landscape.xml center "Cancel" 2>/dev/null) || break
+  adb shell input tap $xy; sleep 1
+  dump ui-landscape
+done
 python3 .github/scripts/ui_bounds.py shots/ui-landscape.xml fits || { echo "::error::Ribbon does not fit in landscape"; exit 1; }
 xy=$(python3 .github/scripts/ui_bounds.py shots/ui-landscape.xml center "Rotate screen") || { echo "::error::No rotate button"; exit 1; }
 adb shell input tap $xy
