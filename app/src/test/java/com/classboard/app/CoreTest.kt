@@ -122,3 +122,29 @@ class ExportRangeTest {
         assertNull(Exporters.parseRange("abc", 6))
     }
 }
+
+class WipeGestureTest {
+    private val ppm = 10.0 // pixels per millimetre
+
+    private fun fingers(vararg mm: Double) = mm.toList().chunked(2).map { com.classboard.app.core.Pt(it[0] * ppm, it[1] * ppm) }
+
+    @Test fun fourFingersHeldTogetherWipe() {
+        val hand = fingers(0.0, 0.0, 18.0, -6.0, 36.0, -6.0, 54.0, 0.0)
+        assertTrue(com.classboard.app.input.PalmGesture.isTightGroup(hand, ppm, 4))
+    }
+
+    @Test fun threeFingersDoNotStartAFourFingerWipe() {
+        val three = fingers(0.0, 0.0, 18.0, -6.0, 36.0, -6.0)
+        assertFalse(com.classboard.app.input.PalmGesture.isTightGroup(three, ppm, 4))
+        assertTrue(com.classboard.app.input.PalmGesture.isTightGroup(three, ppm, 3))
+    }
+
+    @Test fun spreadFingersAreNotAWipe() {
+        val spread = fingers(0.0, 0.0, 60.0, 0.0, 120.0, 0.0, 180.0, 0.0)
+        assertFalse(com.classboard.app.input.PalmGesture.isTightGroup(spread, ppm, 4))
+    }
+
+    @Test fun palmOnlyModeHasNoFingerWipe() {
+        assertFalse(com.classboard.app.input.PalmGesture.isTightGroup(fingers(0.0, 0.0, 10.0, 0.0, 20.0, 0.0), ppm, 0))
+    }
+}

@@ -75,7 +75,8 @@ object DrawingPanels {
         })
         l.addView(desc)
         l.addView(k.slider("Size", 16.0, 200.0, tools.eraserSize, 2.0, format = { "${it.toInt()} px" }) { v, _ -> tools.eraserSize = v })
-        l.addView(k.hint("Tip: wipe with three fingers held together or the flat of your hand to erase anytime."))
+        val wipe = when (app.settings.wipeFingers) { 3 -> "three fingers held together or "; 4 -> "four fingers held together or "; else -> "" }
+        l.addView(k.hint("Tip: wipe with ${wipe}the flat of your hand to erase anytime (change it in Settings)."))
         l.addView(k.row(k.pill("page-clear", "Clear page", danger = true) { app.confirmClearPage() }))
         return l
     }

@@ -25,9 +25,17 @@ class AppSettings(context: Context) {
     var palmErase: Boolean
         get() = prefs.getBoolean("palmErase", true)
         set(v) = prefs.edit().putBoolean("palmErase", v).apply()
+    /** Fingers for the wipe gesture: 0 (palm only), 3 or 4. */
+    var wipeFingers: Int
+        get() = prefs.getInt("wipeFingers", com.classboard.app.input.PalmGesture.DEFAULT_FINGER_COUNT)
+        set(v) = prefs.edit().putInt("wipeFingers", if (v == 3 || v == 4) v else 0).apply()
     var multiUserTouch: Boolean
         get() = prefs.getBoolean("multiUserTouch", false)
         set(v) = prefs.edit().putBoolean("multiUserTouch", v).apply()
+    /** Screen orientation: landscape by default, portrait after the ribbon's rotate button. */
+    var portrait: Boolean
+        get() = prefs.getBoolean("portrait", false)
+        set(v) = prefs.edit().putBoolean("portrait", v).apply()
     var showPageFrame: Boolean
         get() = prefs.getBoolean("showPageFrame", false)
         set(v) = prefs.edit().putBoolean("showPageFrame", v).apply()

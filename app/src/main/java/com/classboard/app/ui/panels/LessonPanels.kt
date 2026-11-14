@@ -210,7 +210,12 @@ object LessonPanels {
         l.addView(k.toggle("Show page frame", "Outline of the area used for export and slides", s.showPageFrame) { s.showPageFrame = it; app.board.showPageFrame = it })
         l.addView(k.toggle("Full screen", "Hide the Android status and navigation bars", app.files.isFullScreen) { if (it != app.files.isFullScreen) app.toggleFullScreen() })
         l.addView(k.section("Touch and pen"))
-        l.addView(k.toggle("Palm and three-finger wipe", "", s.palmErase) { s.palmErase = it; app.board.input.palmEraseEnabled = it })
+        l.addView(k.toggle("Hand wipe", "Wipe ink away with a flat palm or a group of fingers", s.palmErase) { s.palmErase = it; app.board.input.palmEraseEnabled = it })
+        val fingerChoices = listOf(0, 3, 4)
+        l.addView(k.segmented(listOf("" to "Palm only", "" to "3 fingers", "" to "4 fingers"), fingerChoices.indexOf(s.wipeFingers).coerceAtLeast(0)) {
+            s.wipeFingers = fingerChoices[it]; app.board.input.wipeFingers = fingerChoices[it]
+        })
+        l.addView(k.hint("Many Android phones and tablets take a screenshot on a three-finger swipe, so 4 fingers is the default. Choose 3 fingers on boards without that gesture."))
         l.addView(k.toggle("Every finger draws", "Turns two-finger zoom off, so fingers close together also draw. Several people can always write at once.", s.multiUserTouch) {
             s.multiUserTouch = it; app.board.input.multiUserTouch = it
         })

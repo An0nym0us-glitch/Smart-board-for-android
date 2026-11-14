@@ -8,6 +8,8 @@ the same tools and the same `.classboard` lesson files, rebuilt with Android's o
 
 The board fills the screen. The most-used commands sit in a ribbon along the bottom, and the
 rest open as popovers attached to the button that opened them, so you stay on the board.
+It opens in landscape; the rotate button at the right of the ribbon switches to portrait and
+back, and in portrait the ribbon splits into two rows so nothing gets squeezed.
 
 ![MORE popover](docs/images/more-popover.png)
 
@@ -16,7 +18,7 @@ rest open as popovers attached to the button that opened them, so you stay on th
 | Area | What you get |
 |---|---|
 | **Ink** | Smooth pen, highlighter, dashed and dotted ink, stylus pressure. The Magic Highlighter's marks fade away after about five seconds and are never saved. Ten-point touch: every finger writes its own line, two fingers of one hand zoom and pan. Optional shape recognition. |
-| **Eraser** | Stroke, object and area modes; the area eraser rubs out exactly what is under it, even one side of a triangle. Wipe with three fingers held together or the flat of your hand at any time (one undo step). Stylus eraser end supported. |
+| **Eraser** | Stroke, object and area modes; the area eraser rubs out exactly what is under it, even one side of a triangle. Wipe with four fingers held together (three on boards without Android's three-finger screenshot; choose in Settings) or the flat of your hand at any time (one undo step). Stylus eraser end supported. |
 | **Select** | Tap, rectangle or lasso selection, multi-select. Move, resize, rotate (15° snapping) and edit points. Floating bar: edit, exact values, ✨ magic, colour, front/back, duplicate, copy, delete. |
 | **Shapes** | Line, arrow, double arrow, rectangle, rounded rectangle, circle, ellipse, triangle, right triangle, diamond, parallelogram, hexagon, regular polygon and free polygon. Fill none, tint or solid. |
 | **Instruments** | Ruler (draw along its edges, adjustable length), protractor with measuring arms and angle stamp, 45° and 30/60° set square, compass that draws arcs and circles. Two fingers move and rotate them. |

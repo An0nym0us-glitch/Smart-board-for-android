@@ -10,7 +10,9 @@ import kotlin.math.max
 
 /**
  * The bottom ribbon: MORE · PEN · ERASER · SELECT · (tool chip) · UNDO · REDO · FILE · INSERT · EDIT ·
- * ‹ page › · NEW PAGE · PAGE · − zoom + · fit · full screen. Optional groups hide on narrow screens.
+ * ‹ page › · NEW PAGE · PAGE · − zoom + · fit · rotate · full screen. When one row does not fit
+ * (portrait screens) the tools go on the first row and pages/zoom on a second; optional groups
+ * hide only if even that is too narrow.
  */
 @SuppressLint("ViewConstructor")
 class Ribbon(context: Context, private val t: Theme) : ViewGroup(context) {
@@ -49,15 +51,19 @@ class Ribbon(context: Context, private val t: Theme) : ViewGroup(context) {
     val zoom = rb("", "100%", TouchButton.Style.Pill)
     val zoomIn = rb("zoom-in", "Zoom in", TouchButton.Style.Icon)
     val fit = rb("fit-page", "Fit page", TouchButton.Style.Icon)
+    val rotate = rb("rotate-screen", "Rotate screen", TouchButton.Style.Icon)
     val fullScreen = rb("fullscreen", "Full screen", TouchButton.Style.Icon)
 
     private val left = listOf(more, sep1, pen, eraser, select, toolChip, sep2, undo, redo, groupSep, file, insert, edit)
     private val middle = listOf(prev, pageIndicator, next, newPage, pageMenu)
-    private val right = listOf(zoomOut, zoom, zoomIn, fit, fullScreen)
+    private val right = listOf(zoomOut, zoom, zoomIn, fit, rotate, fullScreen)
     /** Hidden first when the ribbon gets too narrow. */
     private val optional: List<List<View>> = listOf(listOf(fit), listOf(zoomOut, zoomIn), listOf(edit), listOf(insert), listOf(file, groupSep), listOf(prev, next), listOf(newPage), listOf(redo))
 
     private val bg = Paint()
+    /** True when laid out as two rows (narrow / portrait screens). */
+    var twoRows = false
+        private set
 
     init {
         setWillNotDraw(false)
@@ -70,33 +76,38 @@ class Ribbon(context: Context, private val t: Theme) : ViewGroup(context) {
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
-        val h = t.rdp(t.ribbonHeight).toInt()
-        val inner = MeasureSpec.makeMeasureSpec(h - t.rdp(12.0).toInt(), MeasureSpec.EXACTLY)
+        val rowH = t.rdp(t.ribbonHeight).toInt()
+        val inner = MeasureSpec.makeMeasureSpec(rowH - t.rdp(12.0).toInt(), MeasureSpec.EXACTLY)
         for (i in 0 until childCount) {
             val c = getChildAt(i)
             if (c is Sep) c.measure(MeasureSpec.makeMeasureSpec(t.rdp(13.0).toInt(), MeasureSpec.EXACTLY), inner)
             else c.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), inner)
         }
-        // Fit: hide optional groups until everything fits (decide first, then apply only changes).
+        // Decide rows and hidden groups first, then apply only the changes (no layout loops).
         val hidden = HashSet<View>()
-        fun required(): Int {
-            var total = 2 * margin()
+        fun rowWidth(list: List<View>): Int {
+            var total = 0
             var count = 0
-            for (v in left + middle + right) {
+            for (v in list) {
                 if (v in hidden || (v === toolChip && toolChip.visibility == GONE)) continue
                 total += v.measuredWidth; count++
             }
-            return total + max(0, count - 1) * gap() + t.rdp(24.0).toInt()
+            return total + max(0, count - 1) * gap()
         }
+        val slack = 2 * margin() + t.rdp(24.0).toInt()
+        fun oneRowFits() = rowWidth(left + middle + right) + slack <= w
+        fun twoRowsFit() = max(rowWidth(left), rowWidth(middle) + gap() + rowWidth(right)) + slack <= w
+        val two = !oneRowFits()
         for (group in optional) {
-            if (required() <= w) break
+            if (if (two) twoRowsFit() else oneRowFits()) break
             hidden.addAll(group)
         }
+        twoRows = two
         for (v in optional.flatten()) {
             val want = if (v in hidden) GONE else VISIBLE
             if (v.visibility != want) v.visibility = want
         }
-        setMeasuredDimension(w, h)
+        setMeasuredDimension(w, if (two) rowH * 2 - t.rdp(10.0).toInt() else rowH)
     }
 
     override fun onLayout(changed: Boolean, l: Int, top: Int, r: Int, b: Int) {
@@ -107,11 +118,11 @@ class Ribbon(context: Context, private val t: Theme) : ViewGroup(context) {
             for (v in list) if (v.visibility != GONE) { w += v.measuredWidth; n++ }
             return w + max(0, n - 1) * g
         }
-        fun layoutRow(list: List<View>, x0: Int) {
+        fun layoutRow(list: List<View>, x0: Int, rowTop: Int, rowH: Int) {
             var x = x0
             for (v in list) {
                 if (v.visibility == GONE) continue
-                val y = (h - v.measuredHeight) / 2
+                val y = rowTop + (rowH - v.measuredHeight) / 2
                 v.layout(x, y, x + v.measuredWidth, y + v.measuredHeight)
                 x += v.measuredWidth + g
             }
@@ -120,13 +131,21 @@ class Ribbon(context: Context, private val t: Theme) : ViewGroup(context) {
         val lw = widthOf(left)
         val mw = widthOf(middle)
         val rw = widthOf(right)
-        layoutRow(left, margin())
-        layoutRow(right, width - margin() - rw)
+        if (twoRows) {
+            // Row 1: tools, centred. Row 2: pages on the left, zoom and view on the right.
+            val rowH = h / 2
+            layoutRow(left, max(margin(), (width - lw) / 2), 0, rowH)
+            layoutRow(middle, margin(), rowH, h - rowH)
+            layoutRow(right, width - margin() - rw, rowH, h - rowH)
+            return
+        }
+        layoutRow(left, margin(), 0, h)
+        layoutRow(right, width - margin() - rw, 0, h)
         // Middle group centred in the free space between left and right.
         val freeL = margin() + lw + g
         val freeR = width - margin() - rw - g
         val mx = (freeL + (freeR - freeL - mw) / 2).coerceAtLeast(freeL)
-        layoutRow(middle, mx)
+        layoutRow(middle, mx, 0, h)
     }
 
     override fun onDraw(c: Canvas) {
@@ -134,6 +153,11 @@ class Ribbon(context: Context, private val t: Theme) : ViewGroup(context) {
         c.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bg)
         bg.color = t.ribbonBorder
         c.drawRect(0f, 0f, width.toFloat(), t.rdp(1.0), bg)
+        if (twoRows) {
+            bg.color = t.separator
+            val y = height / 2f
+            c.drawRect(margin().toFloat(), y, width - margin().toFloat(), y + t.rdp(1.0), bg)
+        }
     }
 
     fun setActiveTool(id: com.classboard.app.tools.ToolId) {

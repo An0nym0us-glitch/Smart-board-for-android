@@ -141,6 +141,10 @@ class Document {
         listeners.toList().forEach { it.onCurrentPageChanged(idx) }
     }
 
+    /** True for a fresh, unsaved one-page lesson with nothing on it. */
+    fun isBlank(): Boolean =
+        fileUri == null && pages.size == 1 && pages[0].objects.isEmpty() && undoStack.isEmpty()
+
     fun createPage(): Page {
         val p = Page()
         p.background = defaultTemplate
@@ -378,13 +382,14 @@ class Document {
         for (p in pages) committed[p.id] = p.objects.map { it.clone() }
     }
 
-    fun resetToNew(background: TemplateSpec) {
+    /** Starts an empty lesson; [portrait] swaps the default 1920x1080 page to 1080x1920. */
+    fun resetToNew(background: TemplateSpec, portrait: Boolean = false) {
         undoStack.clear(); undoIndex = 0; cleanIndex = 0
         pages.clear()
         images.clear()
         defaultTemplate = background
-        defaultPageWidth = Page.DEFAULT_WIDTH
-        defaultPageHeight = Page.DEFAULT_HEIGHT
+        defaultPageWidth = if (portrait) Page.DEFAULT_HEIGHT else Page.DEFAULT_WIDTH
+        defaultPageHeight = if (portrait) Page.DEFAULT_WIDTH else Page.DEFAULT_HEIGHT
         coordinates = CoordinateSystem.default()
         metadata = DocumentMetadata()
         pages.add(createPage())

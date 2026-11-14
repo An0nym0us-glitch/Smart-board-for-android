@@ -48,33 +48,42 @@ interface InputSink {
 
 /** Palm / wipe thresholds (millimetres, converted with the screen density). */
 object PalmGesture {
-    const val FINGER_COUNT = 3
+    /**
+     * Default finger count for the wipe. Many Android phones and tablets reserve a three-finger
+     * swipe for screenshots, so four fingers is the default; interactive panels can pick three.
+     */
+    const val DEFAULT_FINGER_COUNT = 4
     const val MAX_SPACING_MM = 40.0
     const val MAX_GROUP_SIZE_MM = 40.0
+    /** Extra room per finger beyond three: a four-finger group spans a wider hand. */
+    const val EXTRA_SPAN_PER_FINGER_MM = 30.0
     const val GROUP_WINDOW_MS = 450L
     const val MAX_TRAVEL_MM = 20.0
     const val PALM_CONTACT_MM = 24.0
     const val MIN_RADIUS_MM = 14.0
     const val RADIUS_MARGIN_MM = 6.0
 
-    fun isTightGroup(contacts: List<Pt>, ppm: Double): Boolean {
-        if (contacts.size != FINGER_COUNT) return false
+    fun isTightGroup(contacts: List<Pt>, ppm: Double, fingers: Int = DEFAULT_FINGER_COUNT): Boolean {
+        if (fingers < 3 || contacts.size != fingers) return false
         var maxSpacing = 0.0
         for (i in contacts.indices) for (j in i + 1 until contacts.size) maxSpacing = max(maxSpacing, Geom.distance(contacts[i], contacts[j]))
         val b = Geom.boundingRect(contacts)
-        val box = MAX_GROUP_SIZE_MM * ppm
-        return maxSpacing <= MAX_SPACING_MM * ppm && b.width <= box && b.height <= box
+        val extra = (fingers - 3) * EXTRA_SPAN_PER_FINGER_MM
+        val box = (MAX_GROUP_SIZE_MM + extra) * ppm
+        return maxSpacing <= (MAX_SPACING_MM + extra) * ppm && b.width <= box && b.height <= box
     }
 }
 
 /**
  * Converts Android MotionEvents into pointer events and recognises multi-touch gestures.
  * Ten-point touch: each finger writes on its own unless it forms a pinch with a young stroke
- * (pan/zoom), a tight group of three (wipe), or lands near an active gesture. The stylus has
+ * (pan/zoom), a tight group of [wipeFingers] fingers (wipe), or lands near an active gesture. The stylus has
  * priority: while it touches or hovers, new touches are ignored.
  */
 class InputManager(private val sink: InputSink) {
     var palmEraseEnabled = true
+    /** Fingers that start a wipe (3 or 4); 0 = only a flat palm wipes. */
+    var wipeFingers = PalmGesture.DEFAULT_FINGER_COUNT
     var multiUserTouch = false
     var pixelsPerMm = 3.78
         set(v) { field = if (v > 0.5) v else 3.78 }
@@ -339,16 +348,16 @@ class InputManager(private val sink: InputSink) {
     private fun isPalmContact(t: Track) = t.diameter >= PalmGesture.PALM_CONTACT_MM * pixelsPerMm
 
     private fun findPalmGroup(newId: Int, now: Long): List<Int> {
-        if (!palmEraseEnabled || palmIds.isNotEmpty()) return emptyList()
+        if (!palmEraseEnabled || wipeFingers < 3 || palmIds.isNotEmpty()) return emptyList()
         val added = tracks[newId] ?: return emptyList()
         val candidates = tracks.filter { (id, t) ->
             id != newId && t.role != Role.Ignored && now - t.startTime <= PalmGesture.GROUP_WINDOW_MS &&
                 Geom.distance(t.start, t.pos) <= PalmGesture.MAX_TRAVEL_MM * pixelsPerMm
         }.map { Pair(it.key, Geom.distance(it.value.pos, added.pos)) }.sortedBy { it.second }
-        val needed = PalmGesture.FINGER_COUNT - 1
+        val needed = wipeFingers - 1
         if (candidates.size < needed) return emptyList()
         val ids = listOf(newId) + candidates.take(needed).map { it.first }
-        if (!PalmGesture.isTightGroup(ids.map { tracks[it]!!.pos }, pixelsPerMm)) return emptyList()
+        if (!PalmGesture.isTightGroup(ids.map { tracks[it]!!.pos }, pixelsPerMm, wipeFingers)) return emptyList()
         return ids
     }
 

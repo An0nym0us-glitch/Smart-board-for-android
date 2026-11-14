@@ -89,7 +89,7 @@ class App(val activity: Activity, val root: FrameLayout, val files: FileBridge) 
         t.ribbonScale = settings.ribbonScale
         settings.loadTools(tools)
         templates.load()
-        doc.resetToNew(templates.find(settings.defaultTemplateId))
+        doc.resetToNew(templates.find(settings.defaultTemplateId), isPortraitScreen())
 
         board = BoardView(activity, doc, tools, t)
         root.addView(board, FrameLayout.LayoutParams(MATCH, MATCH))
@@ -113,7 +113,9 @@ class App(val activity: Activity, val root: FrameLayout, val files: FileBridge) 
         popovers.onOpened = { key -> ribbon.setMoreOpen(key == "more" || popovers.anchorView === ribbon.more) }
         popovers.onClosed = { ribbon.setMoreOpen(false) }
 
+        applyOrientation()
         board.input.palmEraseEnabled = settings.palmErase
+        board.input.wipeFingers = settings.wipeFingers
         board.input.multiUserTouch = settings.multiUserTouch
         board.showPageFrame = settings.showPageFrame
         board.onEditRequested = { editObject(it) }
@@ -140,21 +142,41 @@ class App(val activity: Activity, val root: FrameLayout, val files: FileBridge) 
 
     private var lastLayout = Triple(0, 0, 0)
 
+    fun isPortraitScreen(): Boolean {
+        val w = root.width; val h = root.height
+        if (w > 0 && h > 0) return h > w
+        val m = activity.resources.displayMetrics
+        return m.heightPixels > m.widthPixels
+    }
+
     private fun layoutChanged() {
         val rh = ribbon.height
         val key = Triple(root.width, root.height, rh)
         if (key == lastLayout) return
+        val prev = lastLayout
         lastLayout = key
         val firstLayout = board.insetsBottom == 0.0 && rh > 0
+        val rotated = prev.first > 0 && prev.second > 0 && root.width > 0 && root.height > 0 &&
+            (prev.second > prev.first) != (root.height > root.width)
         board.insetsBottom = rh.toDouble()
         popovers.bounds = Rect(0, 0, root.width, root.height - rh)
         main.post {
-            if (firstLayout) board.fitPage()
+            if (rotated || firstLayout) matchBlankLessonToScreen()
+            if (firstLayout || rotated) board.fitPage()
             val tlp = toast.layoutParams as FrameLayout.LayoutParams
             val want = rh + t.dp(16.0).toInt()
             if (tlp.bottomMargin != want) { tlp.bottomMargin = want; toast.layoutParams = tlp }
             popovers.relayout()
         }
+    }
+
+    /** An untouched new lesson follows the screen: portrait page on a portrait screen. */
+    private fun matchBlankLessonToScreen() {
+        if (!doc.isBlank()) return
+        val p = doc.pages[0]
+        val portrait = isPortraitScreen()
+        if ((p.height > p.width) == portrait) return
+        doc.resetToNew(p.background, portrait)
     }
 
     // ------------------------------------------------------------------------------ ribbon
@@ -191,6 +213,21 @@ class App(val activity: Activity, val root: FrameLayout, val files: FileBridge) 
         ribbon.zoomOut.setOnClickListener { board.zoomStep(-1) }
         ribbon.fit.setOnClickListener { board.fitPage() }
         ribbon.fullScreen.setOnClickListener { toggleFullScreen() }
+        ribbon.rotate.setOnClickListener { toggleOrientation() }
+    }
+
+    /** Applies the saved orientation: landscape (either side) by default, portrait on request. */
+    fun applyOrientation() {
+        val want = if (settings.portrait) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+        else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+        if (activity.requestedOrientation != want) activity.requestedOrientation = want
+    }
+
+    fun toggleOrientation() {
+        popovers.closeAll()
+        settings.portrait = !settings.portrait
+        applyOrientation()
+        toast.show(if (settings.portrait) "Portrait" else "Landscape", durationMs = 1200)
     }
 
     fun toggleFullScreen() {
@@ -405,7 +442,7 @@ class App(val activity: Activity, val root: FrameLayout, val files: FileBridge) 
     }
 
     fun newLesson() = confirmDiscard {
-        doc.resetToNew(templates.find(settings.defaultTemplateId))
+        doc.resetToNew(templates.find(settings.defaultTemplateId), isPortraitScreen())
         autosave.discard()
         toast.show("New lesson", durationMs = 1500)
     }

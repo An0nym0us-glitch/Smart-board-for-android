@@ -62,6 +62,37 @@ for row in 1 2 3 4 5; do
 done
 shot 05-end
 check "end"
+# Rotate to portrait with the ribbon button; the ribbon must fit on screen in both orientations.
+dump() { adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb shell cat /sdcard/ui.xml > "shots/$1.xml"; }
+adb shell input keyevent KEYCODE_BACK; sleep 1
+adb shell am start -n $PKG/.MainActivity >/dev/null; sleep 2
+dump ui-landscape
+python3 .github/scripts/ui_bounds.py shots/ui-landscape.xml fits || { echo "::error::Ribbon does not fit in landscape"; exit 1; }
+xy=$(python3 .github/scripts/ui_bounds.py shots/ui-landscape.xml center "Rotate screen") || { echo "::error::No rotate button"; exit 1; }
+adb shell input tap $xy
+sleep 4
+check "rotate to portrait"
+shot 06-portrait
+dump ui-portrait
+python3 .github/scripts/ui_bounds.py shots/ui-portrait.xml fits portrait || { echo "::error::Portrait ribbon broken"; exit 1; }
+adb shell input swipe 200 600 900 1100 400
+sleep 1; check "drawing in portrait"; shot 07-portrait-stroke
+# Same check on a phone-sized screen (1080x2340 at 440 dpi).
+adb shell wm size 1080x2340; adb shell wm density 440
+sleep 4; check "phone size"
+dump ui-phone-portrait
+shot 07b-phone-portrait
+python3 .github/scripts/ui_bounds.py shots/ui-phone-portrait.xml fits portrait || { echo "::error::Portrait ribbon broken on a phone-sized screen"; exit 1; }
+adb shell wm size reset; adb shell wm density reset
+sleep 4; check "tablet size again"
+dump ui-portrait
+xy=$(python3 .github/scripts/ui_bounds.py shots/ui-portrait.xml center "Rotate screen")
+adb shell input tap $xy
+sleep 4
+check "rotate back to landscape"
+dump ui-landscape-again
+python3 .github/scripts/ui_bounds.py shots/ui-landscape-again.xml fits || { echo "::error::Ribbon broken after rotating back"; exit 1; }
+shot 08-landscape-again
 echo "Crash check:"
 if adb logcat -d | grep -q "FATAL EXCEPTION"; then
   adb logcat -d | grep -A40 "FATAL EXCEPTION" | head -120

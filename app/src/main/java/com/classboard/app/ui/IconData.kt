@@ -35,6 +35,7 @@ internal object IconData {
         "folder-open" to listOf(IconElement("M3 8V5a1 1 0 0 1 1-1h5l2 2h8a1 1 0 0 1 1 1v2", false, true, 2.0f, false), IconElement("M3 8h18l-2.5 11a1 1 0 0 1-1 .8H5a1 1 0 0 1-1-.8z", false, true, 2.0f, false)),
         "fullscreen-exit" to listOf(IconElement("M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5", false, true, 2.0f, false)),
         "fullscreen" to listOf(IconElement("M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5", false, true, 2.0f, false)),
+        "rotate-screen" to listOf(IconElement("M4.5 9.0h6.0a1.5 1.5 0 0 1 1.5 1.5v9.0a1.5 1.5 0 0 1 -1.5 1.5h-6.0a1.5 1.5 0 0 1 -1.5 -1.5v-9.0a1.5 1.5 0 0 1 1.5 -1.5z", false, true, 2.0f, false), IconElement("M8 4.5a9.5 9.5 0 0 1 11 9.5", false, true, 2.0f, false), IconElement("M16.5 11.5l2.5 2.5 2.5-2.5", false, true, 2.0f, false)),
         "function" to listOf(IconElement("M3 20h18M4 3v18", false, true, 1.5f, false), IconElement("M5 17c3 0 4-10 7-10s3 6 5 6 2-3 3-4", false, true, 2.0f, false)),
         "geometry" to listOf(IconElement("M3 20h18", false, true, 2.0f, false), IconElement("M5 20L12 4l7 16", false, true, 2.0f, false), IconElement("M8.5 13h7", false, true, 2.0f, false)),
         "grid" to listOf(IconElement("M4.5 3.0h15.0a1.5 1.5 0 0 1 1.5 1.5v15.0a1.5 1.5 0 0 1 -1.5 1.5h-15.0a1.5 1.5 0 0 1 -1.5 -1.5v-15.0a1.5 1.5 0 0 1 1.5 -1.5z", false, true, 2.0f, false), IconElement("M9 3v18M15 3v18M3 9h18M3 15h18", false, true, 2.0f, false)),
